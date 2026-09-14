@@ -47,7 +47,7 @@ SELECT p.player_code, p.web_name, pos.code AS pos, c.short_name AS club, pr.pric
 FROM player_seasons ps
 JOIN players p USING (player_code)
 JOIN positions pos USING (position_id)
-JOIN clubs c ON c.club_code = ps.club_code_start
+JOIN clubs c ON c.club_code = fn_club_at(ps.season_id, ps.player_code, fn_current_gw())
 JOIN player_gw_prices pr ON pr.season_id = ps.season_id AND pr.player_code = ps.player_code
                         AND pr.gw_no = fn_current_gw()
 WHERE ps.season_id = fn_current_season()

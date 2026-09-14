@@ -171,6 +171,9 @@ DECLARE
     v_season smallint;
 BEGIN
     SELECT season_id INTO v_season FROM entries WHERE entry_id = COALESCE(NEW.entry_id, OLD.entry_id);
+    IF v_season IS NULL THEN
+        RAISE EXCEPTION 'entry % does not exist', COALESCE(NEW.entry_id, OLD.entry_id) USING ERRCODE = 'check_violation';
+    END IF;
     CASE TG_OP
         WHEN 'INSERT' THEN
             PERFORM fn_assert_open(v_season, NEW.from_gw);
@@ -219,6 +222,9 @@ DECLARE
     v_season smallint;
 BEGIN
     SELECT season_id INTO v_season FROM entries WHERE entry_id = r.entry_id;
+    IF v_season IS NULL THEN
+        RAISE EXCEPTION 'entry % does not exist', r.entry_id USING ERRCODE = 'check_violation';
+    END IF;
     IF current_setting('fpl.system', true) IS DISTINCT FROM 'on' THEN   -- set by advance_gameweek only
         PERFORM fn_assert_open(v_season, r.gw_no);
     END IF;
@@ -266,6 +272,9 @@ DECLARE
     v_pos_in  smallint;
 BEGIN
     SELECT season_id INTO v_season FROM entries WHERE entry_id = NEW.entry_id;
+    IF v_season IS NULL THEN
+        RAISE EXCEPTION 'entry % does not exist', NEW.entry_id USING ERRCODE = 'check_violation';
+    END IF;
     PERFORM fn_assert_open(v_season, NEW.gw_no);
 
     SELECT slot_id, from_gw, purchase_price INTO v_slot, v_from, NEW.price_out
