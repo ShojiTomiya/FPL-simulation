@@ -1,0 +1,17 @@
+# raw data from FPL / vaastav
+data/cache/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# local config with credentials
+config/*.local.yaml
+.env
+
+# macOS / editors
+.DS_Store
+.Rhistory
+.idea/
+.vscode/

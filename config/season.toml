@@ -1,0 +1,10 @@
+# season directory name as used by vaastav/Fantasy-Premier-League
+season = "2025-26"
+
+# csv = historical replay from vaastav, api = live from fantasy.premierleague.com
+source = "csv"
+
+# passed to psql -d; empty host/user means local socket + current OS user
+db = "fpl"
+
+cache_dir = "data/cache"
