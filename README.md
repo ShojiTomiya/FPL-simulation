@@ -68,6 +68,11 @@ SELECT create_entry('michal', 'My Team',
 The squad needs 2 GKP, 5 DEF, 5 MID, 3 FWD, at most 3 from one club, within
 budget. The starting eleven needs 1 GKP, 3 to 5 DEF, 2 to 5 MID, 1 to 3 FWD.
 
+Your `entry_id` is not necessarily 1 - IDENTITY counters don't roll back, so an
+earlier attempt (even a failed or rolled-back one) can bump it. If you forget
+it: `SELECT entry_id, name FROM entries;`. The rest of this guide uses `1` as
+a placeholder - substitute your own.
+
 **3. Look at your team and its points for the current gameweek.**
 
 ```sql
@@ -132,8 +137,35 @@ SELECT gw_no, raw_points, penalty_points, points
 FROM v_entry_gw_points WHERE entry_id = 1 ORDER BY gw_no;
 ```
 
-`make reset-game` wipes all teams and keeps the loaded data. `make replay`
-puts the clock back to gameweek 1.
+To see whether your squad or lineup is legal in plain English, at the current
+gameweek or any past one - mainly useful for debugging or checking history,
+since the database already refuses anything invalid at the moment you try it:
+
+```sql
+SELECT fn_squad_error(1, 12), fn_lineup_error(1, 12);   -- NULL, NULL = all fine
+```
+
+**9. Play with friends in a mini-league.** Anyone with an entry can create one
+and invite others by sharing the join code.
+
+```sql
+INSERT INTO mini_leagues (season_id, name, owner_user_id, join_code)
+VALUES (fn_current_season(), 'Office League', 1, 'ABC123');
+
+INSERT INTO mini_members (league_id, entry_id) VALUES (1, 1), (1, 2), (1, 3);
+
+SELECT e.name, st.total_points,
+       dense_rank() OVER (ORDER BY st.total_points DESC) AS pos
+FROM mini_members mm
+JOIN entries e USING (entry_id)
+JOIN mv_standings st ON st.entry_id = e.entry_id
+WHERE mm.league_id = 1 AND st.gw_no = (SELECT max(gw_no) FROM mv_standings)
+ORDER BY pos;
+```
+
+`make reset-game` wipes all teams, mini-leagues included, keeps the loaded
+data, and resets `entry_id` numbering back to 1. `make replay` puts the clock
+back to gameweek 1.
 
 ## How it works
 
